@@ -1,3 +1,24 @@
+/*
+ * Running gradle build will execute the following tasks in order. These tasks are 
+ * sourced from the plugins applied below in the script.  
+ * 
+ * :compileJava
+ * :processResources
+ * :classes
+ * :findMainClass
+ * :jar
+ * :bootRepackage
+ * :assemble
+ * :compileTestJava
+ * :processTestResources
+ * :testClasses
+ * :test
+ * :check
+ * :build
+ * 
+ * 
+ */
+
 buildscript {
 	ext {
 		springBootVersion = '1.4.0.RELEASE'
@@ -10,14 +31,23 @@ buildscript {
 	}
 }
 
+/*
+ * The Java plugin provides Java-based conventions, including the expected structure of 
+ * source code under the src/ directory. 
+ */
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'spring-boot'
 
+/*
+ * Defines the attributes of the JAR. Includes the name and version. Can also specify the 
+ * main class as part of the manifest, but with Boot its defined as part of properties. 
+ */ 
 jar {
 	baseName = 'gradle-sample'
 	version = '0.0.1-SNAPSHOT'
 }
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
