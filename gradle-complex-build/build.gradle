@@ -1,0 +1,49 @@
+/*
+ * Can be used for defining repos
+ */
+repositories {
+	// maven {url ""}
+}
+
+/*
+ * This defines details for the subprojects defined by this build script
+ */
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse-wtp'
+	apply plugin: 'findbugs'
+	apply plugin: 'pmd'
+	
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
+	
+	eclipse {
+		classpath {
+			downloadSources = true
+		}
+	}
+	
+	/* 
+	 * Can define repos at the subproject level as well. Assume they override or merge
+	 */ 
+	repositories {
+		
+	}
+	
+	task listJars << {
+		configurations.compile.each { File file -> println file.name }
+	}
+	
+	findbugs {
+		ignoreFailures = true
+		sourceSets = [sourceSets.main]
+		reportsDir = file("$project.buildDir/reports/findbugs")		
+	}
+	
+	pmd {
+		ignoreFailures = true
+		sourceSets = [sourceSets.main]
+		reportsDir = file("$project.buildDir/reports/pmd")		
+	}	
+}
+

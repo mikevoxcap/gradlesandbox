@@ -1,0 +1,199 @@
+/*
+ * Adds the standard lifecycle tasks and configures reasonable defaults for the archive tasks:
+ * - adds build ConfigurationName tasks. Those tasks assemble the artifacts belonging to the specified configuration.
+ * - adds upload ConfigurationName tasks. Those tasks assemble and upload the artifacts belonging to the specified configuration.
+ * - configures reasonable default values for all archive tasks (e.g. tasks that inherit from AbstractArchiveTask). For example, the 
+ *   archive tasks are tasks of types: Jar, Tar, Zip. Specifically, destinationDir, baseName and version properties of the 
+ *   archive tasks are preconfigured with defaults. This is extremely useful because it drives consistency across projects; the 
+ *   consistency regarding naming conventions of archives and their location after the build completed. 
+apply plugin: 'base'
+
+/*
+ * Adds Java compilation, testing and bundling capabilities to a project. 
+ */
+apply plugin: 'java'
+
+/*
+ * Allows for the definition of additional repositories for dependencies. This was used on my project to define the 
+ * internal repositories where dependencies resided. 
+ */ 
+repositories { 
+  // maven { url "http://repo1.maven.org/maven/"}
+}
+
+/* 
+ * Source sets allow me to define additional paths for source and test files. Note this approach was used to include 
+ * generated sources. 
+ */
+
+sourceSets {
+/*
+	main {
+		java {
+			srcDir "$buildDir/generated-sources"
+		}
+	}
+*/
+	
+	integrationTest {
+		java {
+			compileClasspath += main.output + test.output
+			runtimeClasspath += main.output + test.output
+			srcDir file('src/integration-test/java')
+		}
+		resources.srcDir file('src/integration-test/resources')
+	}
+}
+
+
+/*
+ * This is part of the Eclipse plug-in and told the build script to download source for dependent libraries. 
+ */
+eclipse {
+	classpath {
+		downloadSources = true
+	}
+}
+ 
+/*
+ * This was used for the generation of source code
+ */
+ 
+/*
+
+ext.jibxVersion = "1.2.5";
+
+def jibxDependencies = ["org.jibx:jibx-run:$jibxVersion", "org.jibx:jibx-bind:$jibxVersion", "org.jibx:jibx-extras:$jibxVersion"]
+
+ext.libs = [jibxDependencies = jibxDependencies]
+
+configurations {
+	generateSources
+	compile {
+		exclude group: "javax.xml.stream", module: "stax-api"
+		exclude group: "xml-apis"
+		exclude group: "xalan"
+		exclude group: "xerces"
+	}
+	jibx
+	
+	integrationTestCompile.extendsFrom testCompile
+	integrationTestRuntime.extendsFrom testRuntime
+}
+
+*/
+
+/*
+ * This section defines the project dependencies
+ */
+
+dependencies {
+	compile "commons-lang:commons-lang:2.6"
+	
+	compile "org.springframework:spring-context:$springVersion"
+	compile "org.springframework:spring-context-support:$springVersion"
+	compile "org.springframework:spring-orm:$springVersion"
+	compile "org.springframework:spring-tx:$springVersion"
+	
+	compile "org.hibernate:hibernate-core:$hibernateVersion"
+	
+	runtime "org.slf4j:jul-to-slf4j:$slf4jVersion"
+	runtime "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+	runtime "org.slf4j:slf4j-log4j12:$slf4jVersion"
+	runtime "log4j:log4j:log4jVersion"
+	
+	testCompile "log4j:log4j:log4jVersion"
+	testCompile "org.springframework:spring-test:$springVersion"
+	testCompile "junit:junit:4.11"
+	testCompile "org.mockito:mockito-all:1.9.5"
+}
+
+/*
+ * I believe this was used for reporting purposes on integration tests
+ */
+tasks.withType(Test) {
+	reports.html.destination = file("${reporting.baseDir}/${name}")
+}
+
+task integrationTest(type: Test) {
+	testClassesDir = sourceSets.integrationTest.output.classesDir
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	outputs.upToDateWhen {false}
+}
+
+/*
+ * Task used for binding in source generation
+ */
+ 
+/*
+task(type : JavaExec, 'generateBinding') {
+	classpath = configurations.jibx + configurations.compile + sourceSets.main.java
+	main = 'org.jibx.binding.Compile'
+	args = ['src/main/resources/binding.xml']
+}
+
+*/
+
+/*
+ * This was used to generate source
+ */
+ 
+/*
+import static groovy.io.FileType.FILES
+task generateSources() {
+	def wsdlDr = file('./src/main/resources/META-INF')
+	def wsldFiles = []
+	
+	def i = 0
+	file ('./src/main/resources/META-INF').eachFileRecurse(FILES) {
+		if (it.name.endsWith('.wsdl')) {
+			wsdlFiles[i] = file(it);
+			i++
+		}
+	}
+	
+	// Used this for the arguments to be passed into command line
+	def wsldsToGenerate = [
+		[
+			"-b", "./src/main/resources/META-INF/service/bindings.txt",
+			"-p", "http://schema", 
+			"./src/main/resources/META-INF/service/service.wsdl"
+		]
+		
+	]
+	
+	// Loops through the WSDLs
+	if (!wsdlFiles.isEmpty()) {
+		inputs.files wsdlFiles
+		outputs.files file("$buildDir/generated-sources")
+		
+		doLast {
+			wsdlsToGenerate.each {
+				argsin ->
+					argsin.add(argsin.size - 1, '-fe')
+					argsin.add(argsin.size - 1, "jaxws21")
+					argsin.add(argsin.size - 1, '-d')
+					argsin.add(argsin.size - 1, "$buildDir/generated-sources")
+					
+					println("Generating source code from: " + argsin[argsin.size-1])
+					
+					javaexec {
+						main = 'org.apache.cxf.tools.wsdlto.WSDLToJava'
+						classpath configurations.generateSources
+						args = argsin
+						systemProperties = ['exitOnFinish':'TRUE']
+					}
+			}
+		}
+	}
+	
+	compileJava.source generateSources.outputs.files, sourceSets.main.java
+}
+
+*/
+
+
+
+
+
+ 
